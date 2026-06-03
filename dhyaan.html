@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dhyaan — Early-Warning Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400&family=Hind:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#16243d;
+    --ink-soft:#3a4a63;
+    --paper:#f6f1e7;
+    --paper-2:#efe7d7;
+    --card:#fffdf8;
+    --saffron:#d96a1f;
+    --saffron-deep:#b85413;
+    --amber:#dba12b;
+    --terra:#c4452f;
+    --sage:#3f7d63;
+    --sage-soft:#e3efe7;
+    --amber-soft:#faf0d8;
+    --terra-soft:#f7e3dd;
+    --line:#e6dcc8;
+    --muted:#857d6b;
+    --shadow: 0 10px 30px -12px rgba(22,36,61,.28);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{
+    font-family:'Hind',sans-serif;
+    background:
+      radial-gradient(1200px 600px at 12% -5%, #fff6e6 0%, transparent 55%),
+      radial-gradient(1000px 700px at 110% 10%, #f0ece0 0%, transparent 50%),
+      #ece5d6;
+    color:var(--ink);
+    min-height:100vh;
+    display:flex;align-items:flex-start;justify-content:center;
+    gap:38px;padding:34px 18px 60px;flex-wrap:wrap;
+  }
+  /* ---------- side rail explainer ---------- */
+  .rail{max-width:330px;padding-top:18px}
+  .rail .brand{font-family:'Fraunces',serif;font-size:30px;font-weight:600;letter-spacing:-.5px;color:var(--ink);display:flex;align-items:center;gap:10px}
+  .rail .brand .dot{width:11px;height:11px;border-radius:50%;background:var(--saffron);box-shadow:0 0 0 4px #d96a1f22}
+  .rail .deva{font-size:15px;color:var(--saffron);font-weight:600;margin:2px 0 16px}
+  .rail p{font-size:14.5px;line-height:1.62;color:var(--ink-soft);margin-bottom:14px}
+  .rail .tag{display:inline-block;font-size:11px;letter-spacing:.13em;text-transform:uppercase;font-weight:700;color:var(--saffron);background:#fff;border:1px solid var(--line);padding:5px 11px;border-radius:30px;margin-bottom:18px}
+  .rail ul{list-style:none;font-size:13.5px;color:var(--ink-soft);line-height:1.5}
+  .rail li{padding:9px 0;border-top:1px dashed var(--line);display:flex;gap:9px}
+  .rail li b{color:var(--ink);font-weight:600}
+  .rail li span.n{color:var(--saffron);font-weight:700;font-family:'Fraunces',serif}
+  .rail .foot{margin-top:18px;font-size:11.5px;color:var(--muted);line-height:1.5}
+
+  /* ---------- phone ---------- */
+  .phone{
+    width:392px;background:#11192b;border-radius:46px;padding:13px;
+    box-shadow:var(--shadow), 0 0 0 2px #0c1322, inset 0 0 0 2px #2a3550;
+    position:relative;flex:0 0 auto;
+  }
+  .screen{
+    background:var(--paper);border-radius:34px;overflow:hidden;position:relative;
+    height:812px;display:flex;flex-direction:column;
+  }
+  /* status bar */
+  .statusbar{height:34px;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font-size:12px;font-weight:600;flex:0 0 auto}
+  .statusbar .net{display:flex;align-items:center;gap:6px}
+  .net .dotnet{width:7px;height:7px;border-radius:50%;background:#7fd1a8}
+  .net.off .dotnet{background:#e0a02e}
+
+  /* app header */
+  .apphead{background:var(--ink);color:#fff;padding:6px 18px 16px;flex:0 0 auto;position:relative}
+  .apphead .row{display:flex;align-items:center;justify-content:space-between}
+  .apphead .ttl{font-family:'Fraunces',serif;font-size:21px;font-weight:600;letter-spacing:-.3px;display:flex;align-items:baseline;gap:8px}
+  .apphead .ttl small{font-size:12px;color:#c9b9a3;font-family:'Hind';font-weight:500}
+  .apphead .meta{font-size:12px;color:#aebbd0;margin-top:3px}
+  .langtoggle{display:flex;background:#26344f;border-radius:30px;padding:3px;gap:2px}
+  .langtoggle button{border:0;background:transparent;color:#aebbd0;font-family:'Hind';font-weight:600;font-size:12px;padding:5px 11px;border-radius:30px;cursor:pointer}
+  .langtoggle button.on{background:var(--saffron);color:#fff}
+  .syncchip{position:absolute;right:18px;top:54px;display:none}
+
+  /* scroll body */
+  .body{flex:1 1 auto;overflow-y:auto;padding:16px 16px 96px;scrollbar-width:thin}
+  .body::-webkit-scrollbar{width:0}
+  .view{display:none;animation:fade .32s ease}
+  .view.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:13px;box-shadow:0 2px 0 #00000005}
+  .eyebrow{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--muted)}
+  .h-lg{font-family:'Fraunces',serif;font-size:21px;font-weight:600;line-height:1.18;letter-spacing:-.3px;margin:4px 0 2px}
+  .sub{font-size:13px;color:var(--ink-soft);line-height:1.5}
+
+  /* attendance */
+  .att-strip{display:flex;align-items:center;justify-content:space-between;margin:2px 2px 12px}
+  .att-strip .date{font-family:'Fraunces',serif;font-size:18px;font-weight:600}
+  .progress-mini{font-size:12.5px;color:var(--muted);font-weight:600}
+  .stu{display:flex;align-items:center;gap:12px;padding:11px 12px;border:1px solid var(--line);border-radius:14px;margin-bottom:9px;background:var(--card);transition:.18s}
+  .stu .av{width:40px;height:40px;border-radius:12px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-weight:600;font-size:16px;color:#fff}
+  .stu .info{flex:1 1 auto;min-width:0}
+  .stu .nm{font-weight:600;font-size:14.5px;line-height:1.1}
+  .stu .rl{font-size:11.5px;color:var(--muted);margin-top:1px}
+  .stu .flag{font-size:10px;font-weight:700;color:var(--terra);background:var(--terra-soft);padding:2px 7px;border-radius:20px;margin-top:3px;display:inline-block}
+  .pa{display:flex;gap:6px}
+  .pa button{border:1.5px solid var(--line);background:#fff;width:42px;height:38px;border-radius:11px;font-family:'Hind';font-weight:700;font-size:13px;cursor:pointer;color:var(--muted);transition:.14s}
+  .pa button.p.on{background:var(--sage);border-color:var(--sage);color:#fff}
+  .pa button.a.on{background:var(--terra);border-color:var(--terra);color:#fff}
+  .savebar{position:sticky;bottom:0;background:linear-gradient(transparent,var(--paper) 26%);padding-top:14px}
+  .btn{width:100%;border:0;border-radius:14px;padding:15px;font-family:'Hind';font-weight:700;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+  .btn.primary{background:var(--saffron);color:#fff;box-shadow:0 8px 18px -8px #d96a1f99}
+  .btn.primary:active{transform:translateY(1px)}
+  .btn.ghost{background:#fff;border:1.5px solid var(--line);color:var(--ink)}
+
+  /* dhyaan list */
+  .why-banner{background:linear-gradient(120deg,#1d2c49,#16243d);color:#fff;border-radius:18px;padding:16px 16px 17px;margin-bottom:14px;position:relative;overflow:hidden}
+  .why-banner:after{content:"";position:absolute;right:-30px;top:-30px;width:120px;height:120px;border-radius:50%;background:#d96a1f22}
+  .why-banner .k{font-family:'Fraunces',serif;font-size:34px;font-weight:600;line-height:1}
+  .why-banner .l{font-size:13px;color:#cdbba2;margin-top:5px;max-width:230px;line-height:1.45}
+  .riskcard{cursor:pointer;border-left:4px solid var(--terra);transition:.16s}
+  .riskcard:active{transform:scale(.99)}
+  .riskcard.watch{border-left-color:var(--amber)}
+  .riskcard .top{display:flex;align-items:center;gap:12px}
+  .riskcard .score{margin-left:auto;text-align:center}
+  .riskcard .score b{font-family:'Fraunces',serif;font-size:22px;font-weight:600;display:block;line-height:1;color:var(--terra)}
+  .riskcard.watch .score b{color:var(--amber)}
+  .riskcard .score span{font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px}
+  .chip{font-size:11px;font-weight:600;padding:4px 9px;border-radius:20px;background:var(--paper);border:1px solid var(--line);color:var(--ink-soft);display:flex;align-items:center;gap:5px}
+  .chip.bad{background:var(--terra-soft);border-color:#e9c4bb;color:#a23420}
+  .chip.warn{background:var(--amber-soft);border-color:#ecd8a5;color:#8a6410}
+  .spark{display:flex;align-items:flex-end;gap:3px;height:30px;margin-top:12px}
+  .spark i{flex:1;background:var(--sage);border-radius:3px 3px 0 0;opacity:.85}
+  .spark i.lo{background:var(--terra)}
+  .spark i.mid{background:var(--amber)}
+  .tap-hint{font-size:11.5px;color:var(--saffron);font-weight:600;margin-top:11px;display:flex;align-items:center;gap:5px}
+
+  /* detail */
+  .backbtn{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--ink-soft);background:none;border:0;cursor:pointer;margin-bottom:10px}
+  .profile{display:flex;align-items:center;gap:13px;margin-bottom:6px}
+  .profile .av{width:54px;height:54px;border-radius:15px;display:flex;align-items:center;justify-content:center;font-family:'Fraunces';font-weight:600;font-size:21px;color:#fff;flex:0 0 auto}
+  .profile h2{font-family:'Fraunces',serif;font-size:21px;font-weight:600;line-height:1}
+  .profile .apaar{font-size:11.5px;color:var(--muted);margin-top:4px;font-variant-numeric:tabular-nums}
+  .gauge{height:9px;border-radius:10px;background:var(--paper-2);overflow:hidden;margin:14px 0 5px}
+  .gauge i{display:block;height:100%;border-radius:10px;background:linear-gradient(90deg,var(--amber),var(--terra))}
+  .barchart{display:flex;align-items:flex-end;gap:5px;height:88px;padding:8px 2px 0;border-bottom:1.5px solid var(--line)}
+  .barchart .b{flex:1;border-radius:4px 4px 0 0;background:var(--sage);position:relative}
+  .barchart .b.lo{background:var(--terra)}
+  .barchart .b.mid{background:var(--amber)}
+  .barlabels{display:flex;gap:5px;margin-top:6px}
+  .barlabels span{flex:1;text-align:center;font-size:9.5px;color:var(--muted);font-weight:600}
+  .reasonline{display:flex;gap:10px;padding:11px 0;border-bottom:1px dashed var(--line);font-size:13px;line-height:1.4}
+  .reasonline .ic{width:24px;height:24px;border-radius:8px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:13px}
+  .ic.r{background:var(--terra-soft)}.ic.a{background:var(--amber-soft)}.ic.s{background:var(--sage-soft)}
+  .action-card{background:linear-gradient(135deg,#fff,#fff7ee);border:1.5px solid #f0d9bf;border-radius:16px;padding:15px;margin-top:13px}
+  .action-card .lbl{font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;font-weight:700;color:var(--saffron)}
+  .action-card .act{font-family:'Fraunces',serif;font-size:17px;font-weight:600;margin:5px 0 4px;line-height:1.25}
+  .action-card .meta{font-size:12px;color:var(--ink-soft);line-height:1.45;margin-bottom:12px}
+  .expl{background:var(--paper);border:1px solid var(--line);border-radius:13px;margin-top:12px;overflow:hidden}
+  .expl summary{list-style:none;cursor:pointer;padding:12px 14px;font-size:12.5px;font-weight:700;color:var(--ink-soft);display:flex;justify-content:space-between;align-items:center}
+  .expl summary::-webkit-details-marker{display:none}
+  .expl .inner{padding:0 14px 14px;font-size:12px;color:var(--ink-soft);line-height:1.55}
+  .expl .inner b{color:var(--ink)}
+
+  /* school view */
+  .statgrid{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:13px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px}
+  .stat b{font-family:'Fraunces',serif;font-size:27px;font-weight:600;line-height:1;display:block}
+  .stat span{font-size:11.5px;color:var(--muted);font-weight:600;line-height:1.3;display:block;margin-top:5px}
+  .stat.t b{color:var(--terra)} .stat.g b{color:var(--sage)} .stat.s b{color:var(--saffron)}
+  .track{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px dashed var(--line)}
+  .track .st{width:9px;height:9px;border-radius:50%;flex:0 0 auto}
+  .st.done{background:var(--sage)}.st.prog{background:var(--amber)}.st.new{background:var(--terra)}
+  .track .nm{font-weight:600;font-size:13.5px;flex:1}
+  .track .tag2{font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:20px}
+  .tag2.done{background:var(--sage-soft);color:var(--sage)}
+  .tag2.prog{background:var(--amber-soft);color:#8a6410}
+  .tag2.new{background:var(--terra-soft);color:#a23420}
+
+  /* bottom nav */
+  .nav{position:absolute;bottom:0;left:0;right:0;background:#fffdf8ee;backdrop-filter:blur(8px);border-top:1px solid var(--line);display:flex;padding:9px 8px 13px;flex:0 0 auto}
+  .nav button{flex:1;background:none;border:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;font-family:'Hind';font-weight:600;font-size:9.5px;color:var(--muted);padding:4px 2px}
+  .nav button svg{width:23px;height:23px;stroke:var(--muted);fill:none;stroke-width:1.9}
+  .nav button.on{color:var(--saffron)}
+  .nav button.on svg{stroke:var(--saffron)}
+  .nav .badge{position:absolute;top:2px;right:50%;margin-right:-22px;background:var(--terra);color:#fff;font-size:9px;font-weight:700;min-width:15px;height:15px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 3px}
+
+  /* toast */
+  .toast{
+    position:absolute;left:16px;right:16px;bottom:86px;
+    background:var(--ink);color:#fff;border-radius:14px;
+    padding:13px 15px;font-size:13px;font-weight:600;
+    display:none;align-items:center;gap:10px;
+    z-index:30;box-shadow:var(--shadow);
+    animation:toastIn .35s cubic-bezier(.2,.9,.3,1);
+  }
+  .toast.show{display:flex}
+  @keyframes toastIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+  .toast .ok{width:22px;height:22px;border-radius:50%;background:var(--sage);display:flex;align-items:center;justify-content:center;flex:0 0 auto;font-size:13px}
+  .toast small{display:block;font-weight:500;color:#bdc8da;font-size:11.5px}
+
+  .apaar-card{background:linear-gradient(135deg,#16243d,#22365b);color:#fff;border-radius:16px;padding:16px;margin-top:13px;position:relative;overflow:hidden}
+  .apaar-card:after{content:"";position:absolute;right:-20px;bottom:-30px;width:110px;height:110px;border-radius:50%;background:#ffffff10}
+  .apaar-card .lbl{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#9fb0ca;font-weight:700;display:flex;align-items:center;gap:6px}
+  .apaar-card .num{font-family:'Fraunces';font-size:18px;letter-spacing:2px;margin:7px 0 12px;font-variant-numeric:tabular-nums}
+  .apaar-card .timeline{font-size:12px;line-height:1.5}
+  .apaar-card .tl{display:flex;gap:9px;padding:6px 0}
+  .apaar-card .tl .d{width:7px;height:7px;border-radius:50%;background:var(--saffron);margin-top:5px;flex:0 0 auto;box-shadow:0 0 0 3px #d96a1f33}
+  .apaar-card .tl b{color:#fff;font-weight:600} .apaar-card .tl span{color:#aebbd0}
+  .apaar-card .view-full{display:inline-flex;align-items:center;gap:6px;margin-top:12px;background:#ffffff18;border:1px solid #ffffff28;border-radius:30px;padding:7px 14px;font-size:12px;font-weight:700;color:#fff;cursor:pointer;transition:.14s}
+  .apaar-card .view-full:active{background:#ffffff28}
+
+  /* ── APAAR Passport full view ── */
+  .passport-wrap{padding:14px 16px 96px}
+  .pp-hero{background:linear-gradient(135deg,#16243d,#1e3158);border-radius:16px;padding:16px;color:#fff;margin-bottom:14px;position:relative;overflow:hidden}
+  .pp-hero:after{content:"";position:absolute;right:-24px;top:-24px;width:120px;height:120px;border-radius:50%;background:#ffffff08}
+  .pp-hero .pp-id{font-family:'Fraunces';font-size:22px;letter-spacing:3px;font-variant-numeric:tabular-nums;margin:6px 0 4px}
+  .pp-hero .pp-sub{font-size:11px;color:#9fb0ca;line-height:1.5}
+  .pp-hero .pp-stats{display:flex;gap:18px;margin-top:12px;border-top:1px solid #ffffff18;padding-top:12px}
+  .pp-hero .pp-stat b{font-family:'Fraunces';font-size:20px;font-weight:600;color:#fff;display:block}
+  .pp-hero .pp-stat span{font-size:10px;color:#9fb0ca;text-transform:uppercase;letter-spacing:.1em}
+
+  .dpi-banner{background:var(--sage-soft);border:1px solid #cfe3d6;border-radius:14px;padding:13px 14px;margin-bottom:14px}
+  .dpi-banner .dpi-ttl{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--sage);margin-bottom:6px}
+  .dpi-banner p{font-size:12px;color:#2f5a45;line-height:1.5}
+  .dpi-banner .inst-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+  .inst-chip{font-size:10px;font-weight:700;padding:4px 9px;border-radius:20px;background:#fff;border:1px solid #cfe3d6;color:var(--sage)}
+  .inst-chip.cur{background:var(--sage);color:#fff}
+
+  .journey-label{font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;font-weight:700;color:var(--muted);margin:0 2px 10px}
+  .journey{position:relative;padding-left:26px}
+  .journey::before{content:'';position:absolute;left:5px;top:6px;bottom:6px;width:2px;background:linear-gradient(to bottom,var(--sage),var(--line));border-radius:2px}
+
+  .jentry{position:relative;margin-bottom:12px}
+  .jentry .jdot{position:absolute;left:-25px;top:14px;width:12px;height:12px;border-radius:50%;border:2.5px solid #fff;box-shadow:0 0 0 2px var(--line)}
+  .jdot.good{background:var(--sage)}.jdot.warn{background:var(--amber)}.jdot.bad{background:var(--terra)}.jdot.cur{background:var(--saffron);box-shadow:0 0 0 4px #d96a1f33}.jdot.gap{background:#ccc}
+
+  .jcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px;transition:.15s}
+  .jcard.current{border-color:var(--saffron);background:#fffaf4}
+  .jcard.gap-card{background:var(--paper);border-style:dashed;border-color:#ccc}
+  .jcard .jyear{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;display:flex;align-items:center;justify-content:space-between}
+  .jcard .jyear .cur-badge{background:var(--saffron);color:#fff;font-size:9px;padding:2px 8px;border-radius:20px;letter-spacing:.08em}
+  .jcard .jschool{font-weight:700;font-size:14px;color:var(--ink);line-height:1.2}
+  .jcard .jcity{font-size:11px;color:var(--muted);margin-top:1px}
+  .jcard .jmeta{display:flex;gap:10px;margin-top:9px;flex-wrap:wrap}
+  .jbadge{font-size:11px;font-weight:600;padding:4px 9px;border-radius:20px}
+  .jbadge.att-good{background:var(--sage-soft);color:var(--sage)}
+  .jbadge.att-warn{background:var(--amber-soft);color:#8a6410}
+  .jbadge.att-bad{background:var(--terra-soft);color:#a23420}
+  .jbadge.rank{background:var(--paper);border:1px solid var(--line);color:var(--ink)}
+  .jbadge.flag{background:var(--terra-soft);color:#a23420}
+  .ach-chip{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:600;background:#fffbe8;border:1px solid #f0d890;color:#8a6410;padding:3px 9px;border-radius:20px;margin:3px 3px 0 0}
+  .jnote{font-size:11.5px;color:var(--ink-soft);margin-top:8px;line-height:1.45;font-style:italic;border-left:2px solid var(--line);padding-left:9px}
+  .written-by{font-size:10px;font-weight:700;color:var(--muted);margin-top:8px;letter-spacing:.06em;text-transform:uppercase}
+  .written-by span{color:var(--saffron)}
+  .gap-text{font-size:12px;color:#888;text-align:center;padding:4px 0}
+  .gap-text b{color:var(--terra)}
+  @media(max-width:880px){.rail{max-width:392px;order:2}}
+
+  /* ── full-screen on real phones ── */
+  @media(max-width:520px){
+    body{padding:0;background:var(--paper);display:block;min-height:100dvh}
+    .rail{display:none}
+    .phone{width:100%;border-radius:0;padding:0;background:transparent;box-shadow:none}
+    .screen{border-radius:0;height:100dvh;height:calc(var(--vh,1vh)*100)}
+    .statusbar{border-radius:0}
+    .toast{bottom:72px;left:10px;right:10px}
+    .nav{border-radius:0}
+    .apphead{border-radius:0}
+  }
+</style>
+</head>
+<body>
+
+<!-- ================= SIDE EXPLAINER ================= -->
+<aside class="rail">
+  <div class="brand"><span class="dot"></span>Dhyaan</div>
+  <div class="deva">ध्यान · so no child slips away unseen</div>
+  <span class="tag">Prototype · Problem 2.6</span>
+  <p>An <b>offline-first early-warning layer</b> for school dropout. It turns the attendance a teacher already takes into one ranked <b>“who needs you this week”</b> list — each with a single, concrete action.</p>
+  <p>It rides on the <b>APAAR</b> student ID so a child’s risk trail follows them across school transfers and seasonal migration — the once-only, interoperable lesson from Estonia, applied to exactly one record.</p>
+  <ul>
+    <li><span class="n">01</span><span><b>Capture</b> — daily attendance in ~30s, fully offline, on a ₹7k phone.</span></li>
+    <li><span class="n">02</span><span><b>Rank</b> — an on-device model watches each child’s <i>own</i> trajectory and surfaces the 3–5 who are slipping.</span></li>
+    <li><span class="n">03</span><span><b>Act</b> — one suggested action per child; tap to log it and close the loop.</span></li>
+    <li><span class="n">04</span><span><b>Carry</b> — risk history travels with the child via APAAR.</span></li>
+  </ul>
+  <div class="foot">Demo data is synthetic. Toggle the network chip (top-right of the phone) to see offline-first behaviour. Switch EN / हिंदी in the header.</div>
+</aside>
+
+<!-- ================= PHONE ================= -->
+<div class="phone">
+  <div class="screen">
+    <!-- status bar -->
+    <div class="statusbar">
+      <span>9:24</span>
+      <span class="net" id="netchip" onclick="toggleNet()" style="cursor:pointer">
+        <span class="dotnet"></span><span id="nettext">Online</span>
+      </span>
+    </div>
+
+    <!-- app header -->
+    <div class="apphead">
+      <div class="row">
+        <div style="display:flex;align-items:center;gap:8px;min-width:0">
+          <button id="hd-back" onclick="go('risk')" style="display:none;background:none;border:0;color:#c9b9a3;font-size:22px;cursor:pointer;padding:0 6px 0 0;line-height:1;flex:0 0 auto">←</button>
+          <div style="min-width:0">
+            <div class="ttl">Dhyaan <small id="hd-sub">Govt. Sr. Sec., Rampur · Cls 9-A</small></div>
+            <div class="meta" id="hd-meta">Mrs. Lakshmi · 38 students</div>
+          </div>
+        </div>
+        <div class="langtoggle">
+          <button id="lang-en" class="on" onclick="setLang('en')">EN</button>
+          <button id="lang-hi" onclick="setLang('hi')">हिं</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- BODY -->
+    <div class="body" id="body">
+
+      <!-- ===== VIEW: ATTENDANCE ===== -->
+      <section class="view active" id="v-att">
+        <div class="att-strip">
+          <span class="date" id="t-today">Today · 3 June</span>
+          <span class="progress-mini" id="att-count">0 marked</span>
+        </div>
+        <div id="stulist"></div>
+        <div class="savebar">
+          <button class="btn primary" onclick="saveAttendance()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4"><path d="M5 13l4 4L19 7"/></svg>
+            <span id="t-save">Save attendance</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- ===== VIEW: DHYAAN (risk list) ===== -->
+      <section class="view" id="v-risk">
+        <div class="why-banner">
+          <div class="k" id="risk-k">3</div>
+          <div class="l" id="risk-l">children in 9-A are starting to slip this week. Reach them before the slip becomes a goodbye.</div>
+        </div>
+        <div id="risklist"></div>
+      </section>
+
+      <!-- ===== VIEW: CHILD DETAIL ===== -->
+      <section class="view" id="v-child"></section>
+
+      <!-- ===== VIEW: SCHOOL ===== -->
+      <section class="view" id="v-school">
+        <p class="eyebrow" style="margin:2px 2px 9px">Head teacher · this week</p>
+        <div class="statgrid">
+          <div class="stat t"><b id="s-flag">7</b><span id="t-s1">children flagged early</span></div>
+          <div class="stat s"><b id="s-act">5</b><span id="t-s2">actions in progress</span></div>
+          <div class="stat g"><b id="s-back">4</b><span id="t-s3">back on track this month</span></div>
+          <div class="stat g"><b>9</b><span id="t-s4">avg. days earlier than register</span></div>
+        </div>
+        <div class="card">
+          <p class="eyebrow" id="t-track">Intervention tracker</p>
+          <div style="margin-top:8px">
+            <div class="track"><span class="st done"></span><span class="nm">Aarti K. · 9-A</span><span class="tag2 done" id="tk1">Returned</span></div>
+            <div class="track"><span class="st prog"></span><span class="nm">Sohail M. · 9-A</span><span class="tag2 prog" id="tk2">Home visit done</span></div>
+            <div class="track"><span class="st prog"></span><span class="nm">Pooja R. · 8-B</span><span class="tag2 prog" id="tk3">Parent called</span></div>
+            <div class="track"><span class="st new"></span><span class="nm">Imran S. · 9-A</span><span class="tag2 new" id="tk4">New flag</span></div>
+            <div class="track" style="border:0"><span class="st new"></span><span class="nm">Rekha D. · 7-A</span><span class="tag2 new" id="tk5">New flag</span></div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ===== VIEW: APAAR PASSPORT ===== -->
+      <section class="view" id="v-apaar"></section>
+
+      <!-- ===== VIEW: PASSPORT DETAIL ===== -->
+      <section class="view" id="v-passport">
+        <div class="passport-wrap" id="passport-content"></div>
+      </section>
+
+    </div>
+
+    <!-- toast -->
+    <div class="toast" id="toast"><span class="ok">✓</span><span id="toast-txt">Saved</span></div>
+
+    <!-- bottom nav -->
+    <div class="nav">
+      <button id="n-att" class="on" onclick="go('att')">
+        <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        <span id="t-n1">Attendance</span>
+      </button>
+      <button id="n-risk" onclick="go('risk')" style="position:relative">
+        <span class="badge" id="nav-badge">3</span>
+        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        <span id="t-n2">Dhyaan</span>
+      </button>
+      <button id="n-school" onclick="go('school')">
+        <svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/></svg>
+        <span id="t-n3">School</span>
+      </button>
+      <button id="n-apaar" onclick="go('apaar')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M7 8h.01M7 12h.01M11 8h6M11 12h4"/></svg>
+        <span id="t-n4">Records</span>
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* ---------------- DATA (synthetic) ---------------- */
+const COLORS = ['#3f7d63','#d96a1f','#5566a8','#b8542a','#4a7c8c','#8a6db0','#c4452f','#3d7a55'];
+function avatarColor(i){return COLORS[i % COLORS.length];}
+function initials(n){const p=n.split(' ');return (p[0][0]+(p[1]?p[1][0]:'')).toUpperCase();}
+
+const students = [
+  {id:'s1', name:'Imran Sheikh', roll:14, risk:78, level:'risk',
+    apaar:'1147 8823 5590', migrant:false,
+    reasons_en:[
+      ['r','Attendance fell from 96% to 61% in 3 weeks — a sharp drop from his own baseline.'],
+      ['r','4 consecutive absences, all on market days (Tue/Fri).'],
+      ['a','Maths score dropped 2 grades after the unit test.']
+    ],
+    reasons_hi:[
+      ['r','उपस्थिति 3 हफ़्तों में 96% से गिरकर 61% — उसके अपने स्तर से तेज़ गिरावट।'],
+      ['r','लगातार 4 दिन अनुपस्थित, सभी बाज़ार के दिन (मंगल/शुक्र)।'],
+      ['a','यूनिट टेस्ट के बाद गणित में 2 ग्रेड की गिरावट।']
+    ],
+    bars:[95,96,92,88,70,61,40], blabel:['W1','W2','W3','W4','W5','W6','W7'],
+    action_en:'Home visit this week', action_hi:'इस हफ़्ते घर जाकर मिलें',
+    actmeta_en:'Pattern matches seasonal work pull. APAAR shows he was Rank 1 from Class 3–6 — this is a capable student with a sudden pull-out pattern, not a chronic underperformer.',
+    actmeta_hi:'पैटर्न मौसमी काम की ओर इशारा करता है। APAAR से पता चलता है कक्षा 3–6 में प्रथम था — यह अचानक बाहर खींचाव है, दीर्घकालिक कमज़ोरी नहीं।',
+    why_en:'Imran\'s flag is driven by <b>baseline shift</b> — dropping from his own 96% norm. His APAAR shows he was Rank 1 for 4 consecutive years. This sudden pattern matches seasonal labour pull, not academic failure.',
+    why_hi:'इमरान का संकेत <b>अपने स्तर से गिरावट</b> से है। उसका APAAR दिखाता है कि वह 4 साल तक प्रथम रहा।',
+    apaarHistory:[
+      {year:'2025 (Now)', school:'Govt. Sr. Sec., Rampur', city:'Rampur, UP', cls:'Class 9-A', att:61, rank:null, achievements:[], flag:'risk', note:'Flagged by Dhyaan — attendance drop from own 96% baseline. Action: home visit scheduled.', writtenBy:'Rampur school', isCurrent:true},
+      {year:'2024–25', school:'Govt. Sr. Sec., Rampur', city:'Rampur, UP', cls:'Class 8', att:85, rank:4, achievements:[], note:'Slight rank slip from Cls 7. Family financial stress noted by class teacher.', writtenBy:'Rampur school'},
+      {year:'2023–24', school:'Govt. Sr. Sec., Rampur', city:'Rampur, UP', cls:'Class 7', att:88, rank:2, achievements:['Science Fair — District 2nd'], note:'', writtenBy:'Rampur school'},
+      {year:'2022–23', school:'Govt. PS, Rampur', city:'Rampur, UP', cls:'Class 6', att:91, rank:1, achievements:['Class Topper','Maths Olympiad — Dist. 1st'], note:'', writtenBy:'Rampur school'},
+      {year:'2021–22', school:'Govt. PS, Rampur', city:'Rampur, UP', cls:'Class 5', att:94, rank:1, achievements:['Class Topper'], note:'', writtenBy:'Rampur school'},
+      {year:'2020–21', school:'Govt. PS, Rampur', city:'Rampur, UP', cls:'Class 4', att:96, rank:1, achievements:[], note:'', writtenBy:'Rampur school'},
+      {year:'2019–20', school:'Govt. PS, Rampur', city:'Rampur, UP', cls:'Class 3', att:95, rank:1, achievements:['Class Topper'], note:'', writtenBy:'Rampur school'},
+    ]},
+
+  {id:'s2', name:'Rekha Devi', roll:22, risk:71, level:'risk',
+    apaar:'2271 0934 1180', migrant:true,
+    reasons_en:[
+      ['r','New transfer-in 5 weeks ago — no local history, a known cold-start blind spot.'],
+      ['a','Attendance erratic: present-absent-present pattern, often Mondays missing.'],
+      ['s','APAAR record shows 3 schools in 6 years — migrant family, seasonal harvest gaps.']
+    ],
+    reasons_hi:[
+      ['r','5 हफ़्ते पहले नया दाख़िला — कोई स्थानीय इतिहास नहीं, ज्ञात ब्लाइंड-स्पॉट।'],
+      ['a','उपस्थिति अनियमित: हाज़िर-ग़ैरहाज़िर-हाज़िर, अक्सर सोमवार ग़ायब।'],
+      ['s','APAAR: 6 वर्षों में 3 स्कूल — प्रवासी परिवार, मौसमी फ़सल-अंतराल।']
+    ],
+    bars:[0,0,80,55,72,50,58], blabel:['—','—','W3','W4','W5','W6','W7'],
+    action_en:'Connect a peer buddy + check transport', action_hi:'साथी छात्र जोड़ें + परिवहन जाँचें',
+    actmeta_en:'APAAR shows she was Rank 1 in Class 3 in Bahraich — this is a capable student at risk of falling through again. Her full 6-year record arrived on enrollment day; without APAAR, no teacher here would know any of this.',
+    actmeta_hi:'APAAR से पता चलता है कि बहराइच में कक्षा 3 में प्रथम थी। दाख़िले के दिन उसका 6 साल का रिकॉर्ड स्वयं आ गया।',
+    why_en:'Rekha is exactly where a fixed rule fails: <b>no local history</b>. But her APAAR passport arrived on enrollment day — 3 schools, 6 years, harvest gaps, and a Rank 1 from Bahraich. The model uses that to flag her in week 5 instead of waiting a full term.',
+    why_hi:'रेखा वहीं है जहाँ साधारण नियम विफल होता है। लेकिन उसका APAAR पासपोर्ट दाख़िले के दिन ही आ गया था।',
+    apaarHistory:[
+      {year:'2025 (Now)', school:'Govt. Sr. Sec., Rampur', city:'Rampur, UP', cls:'Class 9-A', att:58, rank:null, achievements:[], flag:'risk', note:'Enrolled 5 weeks ago via APAAR transfer. Full 6-year record loaded on enrollment day. Cold-start flag raised by Dhyaan.', writtenBy:'Rampur school', isCurrent:true},
+      {year:'2024–25', school:'Govt. MS, Sitapur', city:'Sitapur, UP', cls:'Class 8', att:68, rank:5, achievements:[], note:'Good student, irregular due to family harvest work (Oct–Dec). Completed the year.', writtenBy:'Sitapur school'},
+      {isGap:true, gapText:'Oct–Dec 2023 · No school record', gapDetail:'Family harvest season. APAAR shows enrollment suspended for 2 months.'},
+      {year:'2023–24', school:'Govt. MS, Sitapur', city:'Sitapur, UP', cls:'Class 7 (partial)', att:62, rank:null, achievements:[], note:'Joined Jan 2024 after harvest gap — attended 5 months only. Adjusted well given circumstances.', writtenBy:'Sitapur school'},
+      {year:'2022–23', school:'Govt. PS, Bahraich', city:'Bahraich, UP', cls:'Class 6 → Transfer', att:55, rank:null, achievements:[], note:'Family migrated to Sitapur mid-year (Jan 2023). TC issued. Only 5 months of Cls 6 data here.', writtenBy:'Bahraich school', isTransfer:true},
+      {year:'2021–22', school:'Govt. PS, Bahraich', city:'Bahraich, UP', cls:'Class 5', att:78, rank:3, achievements:[], note:'Seasonal attendance dip (Oct–Nov harvest). Strong academic performance otherwise.', writtenBy:'Bahraich school'},
+      {year:'2020–21', school:'Govt. PS, Bahraich', city:'Bahraich, UP', cls:'Class 4', att:88, rank:2, achievements:['Hindi Essay Prize — School'], note:'', writtenBy:'Bahraich school'},
+      {year:'2019–20', school:'Govt. PS, Bahraich', city:'Bahraich, UP', cls:'Class 3', att:92, rank:1, achievements:['Class Topper','Drawing Prize — Block level'], note:'', writtenBy:'Bahraich school'},
+    ]},
+
+  {id:'s3', name:'Pooja Rathore', roll:9, risk:54, level:'watch',
+    apaar:'3390 5521 7745', migrant:false,
+    reasons_en:[
+      ['a','Slow downward attendance drift over 6 weeks (88% → 74%).'],
+      ['a','Two missed assessments; scores otherwise stable.'],
+      ['s','Grade 8 — approaching the high-risk 8→9 transition year.']
+    ],
+    reasons_hi:[
+      ['a','6 हफ़्तों में धीमी गिरावट (88% → 74%)।'],
+      ['a','दो आकलन छूटे; बाक़ी अंक स्थिर।'],
+      ['s','कक्षा 8 — जोखिम भरे 8→9 संक्रमण के पास।']
+    ],
+    bars:[90,88,85,82,78,76,74], blabel:['W1','W2','W3','W4','W5','W6','W7'],
+    action_en:'A quick parent phone call', action_hi:'अभिभावक को छोटा फ़ोन कॉल',
+    actmeta_en:'Lower urgency — a watch case. A 2-minute call now usually arrests a slow drift before it accelerates near the transition year.',
+    actmeta_hi:'कम तात्कालिकता — निगरानी मामला। अभी 2-मिनट की कॉल धीमी गिरावट रोक देती है।',
+    why_en:'Pooja is a <b>watch</b>, not an alarm. The model ranks her third so your attention goes to steeper risks first — triage, not a flat list.',
+    why_hi:'पूजा <b>निगरानी</b> है, अलार्म नहीं।',
+    apaarHistory:[
+      {year:'2025 (Now)', school:'Govt. Sr. Sec., Rampur', city:'Rampur, UP', cls:'Class 8', att:74, rank:null, achievements:[], flag:'watch', note:'Slow attendance drift. Approaching Class 8→9 transition — a known high-risk year nationally.', writtenBy:'Rampur school', isCurrent:true},
+      {year:'2024–25', school:'Govt. Sr. Sec., Rampur', city:'Rampur, UP', cls:'Class 7', att:88, rank:3, achievements:['Science Project — 2nd'], note:'', writtenBy:'Rampur school'},
+      {year:'2023–24', school:'Govt. Sr. Sec., Rampur', city:'Rampur, UP', cls:'Class 6', att:90, rank:2, achievements:['Class Topper (Term 1)'], note:'', writtenBy:'Rampur school'},
+      {year:'2022–23', school:'Govt. PS, Rampur', city:'Rampur, UP', cls:'Class 5', att:93, rank:2, achievements:[], note:'', writtenBy:'Rampur school'},
+      {year:'2021–22', school:'Govt. PS, Rampur', city:'Rampur, UP', cls:'Class 4', att:91, rank:1, achievements:['Class Topper'], note:'', writtenBy:'Rampur school'},
+      {year:'2020–21', school:'Govt. PS, Rampur', city:'Rampur, UP', cls:'Class 3', att:89, rank:2, achievements:[], note:'', writtenBy:'Rampur school'},
+    ]}
+];
+
+/* roster for attendance (includes safe kids) */
+const roster = [
+  ...students.map(s=>({id:s.id,name:s.name,roll:s.roll,flag:s.level})),
+  {id:'a1',name:'Anjali Verma',roll:3},
+  {id:'a2',name:'Karan Singh',roll:7},
+  {id:'a3',name:'Suman Yadav',roll:11},
+  {id:'a4',name:'Vikram Das',roll:18},
+  {id:'a5',name:'Neha Gupta',roll:25},
+].sort((a,b)=>a.roll-b.roll);
+
+/* ---------------- I18N ---------------- */
+const T = {
+  en:{sub:'Govt. Sr. Sec., Rampur · Cls 9-A', meta:'Mrs. Lakshmi · 38 students',
+    today:'Today · 3 June', save:'Save attendance', marked:m=>`${m} marked`,
+    riskl:'children in 9-A are starting to slip this week. Reach them before the slip becomes a goodbye.',
+    n1:'Attendance',n2:'Dhyaan',n3:'School',n4:'Records', tap:'Tap to see why & what to do',
+    why:'Why flagged?', action:'Suggested action', log:'Log action taken',
+    s1:'children flagged early',s2:'actions in progress',s3:'back on track this month',s4:'avg. days earlier than register',
+    track:'Intervention tracker', back:'Back', trail:'APAAR trail preview',
+    viewPassport:'View full APAAR passport →',
+    rdiff:m=>`${m} risk`, watch:'Watch', risk:'Act now', saved:'Attendance saved — queued',
+    savedoff:'Saved offline — will sync when online', logged:n=>`Logged for ${n}. Head teacher notified.`,
+    reasons:'Why Dhyaan flagged this child', score:'risk'},
+  hi:{sub:'राज. व. मा., रामपुर · कक्षा 9-A', meta:'श्रीमती लक्ष्मी · 38 छात्र',
+    today:'आज · 3 जून', save:'उपस्थिति सहेजें', marked:m=>`${m} दर्ज`,
+    riskl:'बच्चे 9-A में इस हफ़्ते फिसलने लगे हैं। फिसलन के अलविदा बनने से पहले उन तक पहुँचें।',
+    n1:'उपस्थिति',n2:'ध्यान',n3:'स्कूल',n4:'रिकॉर्ड', tap:'कारण व समाधान देखने हेतु टैप करें',
+    why:'क्यों चिह्नित?', action:'सुझाई गई कार्रवाई', log:'की गई कार्रवाई दर्ज करें',
+    s1:'बच्चे जल्दी चिह्नित',s2:'कार्रवाई जारी',s3:'इस माह वापस पटरी पर',s4:'रजिस्टर से औसत दिन पहले',
+    track:'हस्तक्षेप ट्रैकर', back:'वापस', trail:'APAAR झलक',
+    viewPassport:'पूरा APAAR पासपोर्ट देखें →',
+    rdiff:m=>`${m} जोखिम`, watch:'निगरानी', risk:'अभी कार्रवाई', saved:'उपस्थिति सहेजी गई',
+    savedoff:'ऑफ़लाइन सहेजा — ऑनलाइन होने पर सिंक होगा', logged:n=>`${n} हेतु दर्ज। प्रधानाध्यापक को सूचित।`,
+    reasons:'ध्यान ने इस बच्चे को क्यों चिह्नित किया', score:'जोखिम'}
+};
+let lang='en', online=true, curChild=null;
+
+function setLang(l){
+  lang=l;
+  document.getElementById('lang-en').classList.toggle('on',l==='en');
+  document.getElementById('lang-hi').classList.toggle('on',l==='hi');
+  const t=T[l];
+  document.getElementById('hd-sub').textContent=t.sub;
+  document.getElementById('hd-meta').textContent=t.meta;
+  document.getElementById('t-today').textContent=t.today;
+  document.getElementById('t-save').textContent=t.save;
+  document.getElementById('risk-l').textContent=t.riskl;
+  document.getElementById('t-n1').textContent=t.n1;
+  document.getElementById('t-n2').textContent=t.n2;
+  document.getElementById('t-n3').textContent=t.n3;
+  document.getElementById('t-n4').textContent=t.n4;
+  document.getElementById('t-s1').textContent=t.s1;
+  document.getElementById('t-s2').textContent=t.s2;
+  document.getElementById('t-s3').textContent=t.s3;
+  document.getElementById('t-s4').textContent=t.s4;
+  document.getElementById('t-track').textContent=t.track;
+  renderRoster(); renderRisk();
+  if(curChild) openChild(curChild);
+}
+
+function toggleNet(){
+  online=!online;
+  const c=document.getElementById('netchip');
+  c.classList.toggle('off',!online);
+  document.getElementById('nettext').textContent=online?(lang==='en'?'Online':'ऑनलाइन'):(lang==='en'?'Offline':'ऑफ़लाइन');
+}
+
+/* ---------------- ATTENDANCE ---------------- */
+function renderRoster(){
+  const wrap=document.getElementById('stulist'); wrap.innerHTML='';
+  roster.forEach((s,i)=>{
+    const flagHtml = s.flag ? `<span class="flag">${s.flag==='risk'?(lang==='en'?'⚠ at risk':'⚠ जोखिम'):(lang==='en'?'watch':'निगरानी')}</span>`:'';
+    const el=document.createElement('div'); el.className='stu';
+    el.innerHTML=`
+      <div class="av" style="background:${avatarColor(i)}">${initials(s.name)}</div>
+      <div class="info">
+        <div class="nm">${s.name}</div>
+        <div class="rl">${lang==='en'?'Roll':'क्रमांक'} ${s.roll}</div>
+        ${flagHtml}
+      </div>
+      <div class="pa">
+        <button class="p ${s.present===true?'on':''}" onclick="mark('${s.id}',true,this)">P</button>
+        <button class="a ${s.present===false?'on':''}" onclick="mark('${s.id}',false,this)">A</button>
+      </div>`;
+    wrap.appendChild(el);
+  });
+  updateCount();
+}
+function mark(id,present,btn){
+  const s=roster.find(x=>x.id===id); s.present=present;
+  const pa=btn.parentElement;
+  pa.querySelector('.p').classList.toggle('on',present);
+  pa.querySelector('.a').classList.toggle('on',!present);
+  updateCount();
+}
+function updateCount(){
+  const marked=roster.filter(s=>s.present===true||s.present===false).length;
+  document.getElementById('att-count').textContent=T[lang].marked(marked+'/'+roster.length);
+}
+function saveAttendance(){
+  showToast(online?T[lang].saved:T[lang].savedoff);
+}
+
+/* ---------------- RISK LIST ---------------- */
+function sparkBars(arr){
+  const max=Math.max(...arr.filter(v=>v>0),1);
+  return arr.map(v=>{
+    if(v===0) return `<i style="height:6%;background:#ddd"></i>`;
+    const h=Math.max(12,Math.round(v/max*100));
+    const cls = v<55?'lo':v<72?'mid':'';
+    return `<i class="${cls}" style="height:${h}%"></i>`;
+  }).join('');
+}
+function renderRisk(){
+  const wrap=document.getElementById('risklist'); wrap.innerHTML='';
+  document.getElementById('risk-k').textContent=students.length;
+  document.getElementById('nav-badge').textContent=students.length;
+  students.forEach((s,i)=>{
+    const reasons = lang==='en'?s.reasons_en:s.reasons_hi;
+    const chipHtml = reasons.slice(0,2).map(r=>`<span class="chip ${r[0]==='r'?'bad':r[0]==='a'?'warn':''}">${r[1].length>34?r[1].slice(0,32)+'…':r[1]}</span>`).join('');
+    const el=document.createElement('div');
+    el.className='card riskcard '+(s.level==='watch'?'watch':'');
+    el.onclick=()=>openChild(s.id);
+    el.innerHTML=`
+      <div class="top">
+        <div class="av" style="width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:'Fraunces';font-weight:600;color:#fff;background:${avatarColor(i)}">${initials(s.name)}</div>
+        <div>
+          <div class="nm" style="font-weight:600;font-size:15px">${s.name}</div>
+          <div class="rl" style="font-size:11.5px;color:var(--muted)">${lang==='en'?'Roll':'क्रमांक'} ${s.roll} · ${s.level==='watch'?T[lang].watch:T[lang].risk}</div>
+        </div>
+        <div class="score"><b>${s.risk}</b><span>${T[lang].score}</span></div>
+      </div>
+      <div class="chips">${chipHtml}</div>
+      <div class="spark">${sparkBars(s.bars)}</div>
+      <div class="tap-hint">${T[lang].tap} →</div>`;
+    wrap.appendChild(el);
+  });
+}
+
+/* ---------------- CHILD DETAIL ---------------- */
+function openChild(id){
+  curChild=id;
+  const s=students.find(x=>x.id===id);
+  const i=students.indexOf(s);
+  const reasons=lang==='en'?s.reasons_en:s.reasons_hi;
+  const max=Math.max(...s.bars.filter(v=>v>0),1);
+  const bars=s.bars.map((v,k)=>{
+    const h=v===0?5:Math.max(12,Math.round(v/max*100));
+    const cls=v===0?'':v<55?'lo':v<72?'mid':'';
+    return `<div class="b ${cls}" style="height:${h}%"></div>`;
+  }).join('');
+  const labels=s.blabel.map(l=>`<span>${l}</span>`).join('');
+  const reasonsHtml=reasons.map(r=>`
+    <div class="reasonline">
+      <span class="ic ${r[0]}">${r[0]==='r'?'▼':r[0]==='a'?'~':'◷'}</span>
+      <span>${r[1]}</span>
+    </div>`).join('');
+  const schools = [...new Set(s.apaarHistory.filter(e=>!e.isGap).map(e=>e.school))];
+  const totalYears = s.apaarHistory.filter(e=>!e.isGap).length;
+  const bestRank = s.apaarHistory.filter(e=>e.rank===1).length;
+  const apaarBlock = `
+    <div class="apaar-card">
+      <div class="lbl">◈ APAAR ${lang==='en'?'academic trail':'शैक्षणिक रिकॉर्ड'}</div>
+      <div class="num">${s.apaar}</div>
+      <div style="font-size:12px;color:#9fb0ca;margin-bottom:12px">
+        ${schools.length} ${lang==='en'?'institution'+(schools.length>1?'s':''):'संस्था'} · ${totalYears} ${lang==='en'?'academic years':'शैक्षणिक वर्ष'}${bestRank>0?' · '+bestRank+' Rank 1':''}
+      </div>
+      <div style="font-size:12px;color:#aebbd0;line-height:1.5;border-top:1px solid #ffffff18;padding-top:10px;margin-bottom:12px">
+        ${s.apaarHistory.filter(e=>!e.isGap).slice(0,2).map(e=>`
+        <div style="display:flex;justify-content:space-between;padding:4px 0">
+          <span>${e.cls}${e.isTransfer?'*':''}</span>
+          <span style="color:#c9b9a3">${e.school.split(',')[0]}</span>
+          <span style="color:${e.att>=85?'#7fd1a8':e.att>=70?'#f0c060':'#ff8b77'}">${e.att?e.att+'%':lang==='en'?'partial':'आंशिक'}</span>
+        </div>`).join('')}
+      </div>
+      <button class="view-full" onclick="openPassport('${s.id}')">
+        ${T[lang].viewPassport}
+      </button>
+    </div>`;
+
+  document.getElementById('v-child').innerHTML=`
+    <div class="profile">
+      <div class="av" style="background:${avatarColor(i)}">${initials(s.name)}</div>
+      <div>
+        <h2>${s.name}</h2>
+        <div class="apaar">APAAR ${s.apaar} · ${lang==='en'?'Roll':'क्रमांक'} ${s.roll}</div>
+      </div>
+      <div style="margin-left:auto;text-align:center">
+        <div style="font-family:'Fraunces';font-size:28px;font-weight:600;line-height:1;color:${s.level==='watch'?'var(--amber)':'var(--terra)'}">${s.risk}</div>
+        <div style="font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700">${s.level==='watch'?T[lang].watch:T[lang].risk}</div>
+      </div>
+    </div>
+    <div class="gauge"><i style="width:${s.risk}%"></i></div>
+
+    <div class="card" style="margin-top:14px">
+      <p class="eyebrow">${lang==='en'?'Weekly attendance — own baseline':'साप्ताहिक उपस्थिति — स्वयं का स्तर'}</p>
+      <div class="barchart">${bars}</div>
+      <div class="barlabels">${labels}</div>
+    </div>
+
+    <div class="card">
+      <p class="eyebrow">${T[lang].reasons}</p>
+      <div style="margin-top:4px">${reasonsHtml}</div>
+    </div>
+
+    <div class="action-card">
+      <div class="lbl">${T[lang].action}</div>
+      <div class="act">${lang==='en'?s.action_en:s.action_hi}</div>
+      <div class="meta">${lang==='en'?s.actmeta_en:s.actmeta_hi}</div>
+      <button class="btn primary" onclick="logAction('${s.name.split(' ')[0]}')">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
+        ${T[lang].log}
+      </button>
+    </div>
+
+    <details class="expl">
+      <summary>${T[lang].why} <span style="color:var(--saffron)">＋</span></summary>
+      <div class="inner">${lang==='en'?s.why_en:s.why_hi}</div>
+    </details>
+
+    ${apaarBlock}
+    <div style="height:8px"></div>`;
+  go('child',true);
+}
+
+function logAction(name){
+  showToast(T[lang].logged(name));
+  setTimeout(()=>go('risk'),900);
+}
+
+/* ---------------- NAV ---------------- */
+function go(v, fromChild){
+  clearTimeout(toastTimer);
+  document.getElementById('toast').classList.remove('show');
+
+  document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
+  document.getElementById('v-'+v).classList.add('active');
+  document.getElementById('body').scrollTop=0;
+
+  ['att','risk','school','apaar'].forEach(n=>{
+    const b=document.getElementById('n-'+n);
+    if(b) b.classList.toggle('on', n===v);
+  });
+  if(v==='child') document.getElementById('n-risk').classList.add('on');
+  if(v==='passport') document.getElementById('n-apaar').classList.add('on');
+  if(v!=='child' && v!=='passport') curChild=null;
+
+  // back button in header: show for child detail and passport
+  const showBack = v==='child' || v==='passport';
+  document.getElementById('hd-back').style.display = showBack ? 'block' : 'none';
+  // passport back returns to apaar records; child back returns to risk
+  document.getElementById('hd-back').onclick = v==='passport' ? ()=>go('apaar') : ()=>go('risk');
+
+  // render records view on demand
+  if(v==='apaar') renderRecords();
+}
+
+/* ---------------- PASSPORT ---------------- */
+function openPassport(id){
+  curChild=id;
+  const s=students.find(x=>x.id===id);
+  const i=students.indexOf(s);
+  const history=s.apaarHistory;
+  const schools=[...new Set(history.filter(e=>!e.isGap).map(e=>e.school))];
+  const totalYears=history.filter(e=>!e.isGap).length;
+  const allAch=history.flatMap(e=>e.achievements||[]);
+  const ranks1=history.filter(e=>e.rank===1).length;
+
+  const institutionChips=schools.map((sch,idx)=>{
+    const isCur=sch===history[0].school;
+    return `<span class="inst-chip ${isCur?'cur':''}">${sch.replace('Govt. ','')}</span>`;
+  }).join('');
+
+  const journeyHtml=history.map(entry=>{
+    if(entry.isGap) return `
+      <div class="jentry">
+        <span class="jdot gap"></span>
+        <div class="jcard gap-card">
+          <div class="gap-text"><b>⚠ ${entry.gapText}</b><br><span style="font-size:10.5px">${entry.gapDetail}</span></div>
+        </div>
+      </div>`;
+    const att=entry.att||0;
+    const attClass=att>=85?'att-good':att>=65?'att-warn':'att-bad';
+    const dotClass=entry.isCurrent?'cur':att>=85?'good':att>=65?'warn':'bad';
+    const achHtml=(entry.achievements||[]).map(a=>`<span class="ach-chip">🏅 ${a}</span>`).join('');
+    const flagHtml=entry.flag?`<span class="jbadge flag">${entry.flag==='risk'?'⚠ Flagged':'👁 Watch'}</span>`:'';
+    const transferBadge=entry.isTransfer?`<span class="jbadge" style="background:#e8f4ff;border:1px solid #b8d8f0;color:#1a5a8a">↗ Transfer out</span>`:'';
+    return `
+      <div class="jentry">
+        <span class="jdot ${dotClass}"></span>
+        <div class="jcard ${entry.isCurrent?'current':''}">
+          <div class="jyear">
+            <span>${entry.year}</span>
+            ${entry.isCurrent?`<span class="cur-badge">CURRENT · WRITING NOW</span>`:''}
+          </div>
+          <div class="jschool">${entry.school}</div>
+          <div class="jcity">${entry.city} · ${entry.cls}</div>
+          <div class="jmeta">
+            ${att?`<span class="jbadge ${attClass}">${att}% attendance</span>`:''}
+            ${entry.rank?`<span class="jbadge rank">Rank ${entry.rank}</span>`:''}
+            ${flagHtml}${transferBadge}
+          </div>
+          ${achHtml?`<div style="margin-top:8px">${achHtml}</div>`:''}
+          ${entry.note?`<div class="jnote">${entry.note}</div>`:''}
+          <div class="written-by">Written by <span>${entry.writtenBy}</span> → APAAR</div>
+        </div>
+      </div>`;
+  }).join('');
+
+  document.getElementById('passport-content').innerHTML=`
+    <div class="pp-hero">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="width:48px;height:48px;border-radius:13px;background:${avatarColor(i)};display:flex;align-items:center;justify-content:center;font-family:'Fraunces';font-weight:600;font-size:19px;color:#fff;flex:0 0 auto">${initials(s.name)}</div>
+        <div>
+          <div style="font-family:'Fraunces';font-size:19px;font-weight:600;color:#fff">${s.name}</div>
+          <div style="font-size:11px;color:#9fb0ca;margin-top:2px">APAAR</div>
+          <div class="pp-id">${s.apaar}</div>
+        </div>
+      </div>
+      <div class="pp-stats">
+        <div class="pp-stat"><b>${schools.length}</b><span>${lang==='en'?'Institutions':'संस्थाएं'}</span></div>
+        <div class="pp-stat"><b>${totalYears}</b><span>${lang==='en'?'Acad. years':'शैक्षणिक वर्ष'}</span></div>
+        <div class="pp-stat"><b>${ranks1}</b><span>${lang==='en'?'Rank 1s':'प्रथम'}</span></div>
+        <div class="pp-stat"><b>${allAch.length}</b><span>${lang==='en'?'Awards':'पुरस्कार'}</span></div>
+      </div>
+    </div>
+
+    <div class="dpi-banner">
+      <div class="dpi-ttl">◈ How this DPI works</div>
+      <p>${lang==='en'
+        ?`No school builds a silo. Each institution <b>reads</b> this record on enrolment day and <b>writes</b> their data back to APAAR — not to their own database. When ${s.name.split(' ')[0]} joined here, ${schools.length>1?schools.length+' years of records from '+schools.length+' schools arrived in seconds':'all records were already here'}.`
+        :`कोई भी स्कूल अपना सिलो नहीं बनाता। हर संस्था दाख़िले के दिन यह रिकॉर्ड <b>पढ़ती</b> है और अपना डेटा APAAR में वापस <b>लिखती</b> है — अपने डेटाबेस में नहीं।`
+      }</p>
+      <div class="inst-row">${institutionChips}</div>
+    </div>
+
+    <p class="journey-label">${lang==='en'?'Academic journey — newest first':'शैक्षणिक यात्रा — नवीनतम पहले'}</p>
+    <div class="journey">${journeyHtml}</div>
+    <div style="height:16px"></div>`;
+
+  // Switch to passport view
+  clearTimeout(toastTimer);
+  document.getElementById('toast').classList.remove('show');
+  document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
+  document.getElementById('v-passport').classList.add('active');
+  document.getElementById('body').scrollTop=0;
+  document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('on'));
+  document.getElementById('n-apaar').classList.add('on');
+  document.getElementById('hd-back').style.display='block';
+  document.getElementById('hd-back').onclick=()=>go(curChild?'apaar':'apaar');
+}
+
+/* ---------------- RECORDS (APAAR tab) ---------------- */
+function renderRecords(){
+  const wrap=document.getElementById('v-apaar');
+  wrap.innerHTML=`
+    <div style="padding:14px 16px 96px">
+      <p class="eyebrow" style="margin:0 2px 6px">${lang==='en'?'APAAR student records':'APAAR छात्र रिकॉर्ड'}</p>
+      <p style="font-size:13px;color:var(--ink-soft);margin-bottom:14px;line-height:1.5">${lang==='en'
+        ?'Tap any student to see their full academic passport — built from every school they ever attended.'
+        :'किसी भी छात्र को टैप करें — हर स्कूल का पूरा रिकॉर्ड देखें।'
+      }</p>
+      <div style="background:linear-gradient(135deg,#16243d,#22365b);border-radius:14px;padding:14px;margin-bottom:14px;color:#aebbd0;font-size:12px;line-height:1.6">
+        <div style="color:var(--saffron);font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px">◈ ${lang==='en'?'How DPI works here':'DPI यहाँ कैसे काम करता है'}</div>
+        ${lang==='en'
+          ?'Every school <b style="color:#fff">writes</b> attendance, grades & teacher notes to the student\'s APAAR record. Every new school <b style="color:#fff">reads</b> that record on Day 1. No authority needs to build a separate tracking system — the record travels with the student.'
+          :'हर स्कूल उपस्थिति, ग्रेड व नोट APAAR में <b style="color:#fff">लिखता</b> है। हर नया स्कूल Day 1 पर वह रिकॉर्ड <b style="color:#fff">पढ़ता</b> है।'
+        }
+      </div>
+      ${students.map((s,i)=>{
+        const schools=[...new Set(s.apaarHistory.filter(e=>!e.isGap).map(e=>e.school))];
+        const ranks=s.apaarHistory.filter(e=>e.rank===1).length;
+        const atts=s.apaarHistory.filter(e=>!e.isGap&&e.att);
+        const avgAtt=atts.length?Math.round(atts.reduce((a,b)=>a+b.att,0)/atts.length):0;
+        const flagColor=s.level==='risk'?'var(--terra)':'var(--amber)';
+        return `<div onclick="openPassport('${s.id}')" style="background:var(--card);border:1px solid var(--line);border-left:4px solid ${flagColor};border-radius:14px;padding:14px;margin-bottom:11px;cursor:pointer;transition:.15s" ontouchstart="">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div style="width:44px;height:44px;border-radius:12px;background:${avatarColor(i)};display:flex;align-items:center;justify-content:center;font-family:'Fraunces';font-weight:600;font-size:17px;color:#fff;flex:0 0 auto">${initials(s.name)}</div>
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:700;font-size:15px">${s.name}</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:1px">APAAR ${s.apaar}</div>
+            </div>
+            <span style="font-size:11px;font-weight:700;color:var(--saffron)">View →</span>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+            <span style="font-size:11px;font-weight:600;background:var(--paper);border:1px solid var(--line);padding:3px 9px;border-radius:20px;color:var(--ink)">${schools.length} ${lang==='en'?'school'+(schools.length>1?'s':''):'स्कूल'}</span>
+            <span style="font-size:11px;font-weight:600;background:var(--sage-soft);border:1px solid #cfe3d6;padding:3px 9px;border-radius:20px;color:var(--sage)">${avgAtt}% ${lang==='en'?'avg att.':'औसत उप.'}</span>
+            ${ranks?`<span style="font-size:11px;font-weight:600;background:#fffbe8;border:1px solid #f0d890;padding:3px 9px;border-radius:20px;color:#8a6410">${ranks}× Rank 1</span>`:''}
+            <span style="font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:${s.level==='risk'?'var(--terra-soft)':'var(--amber-soft)'};color:${s.level==='risk'?'#a23420':'#8a6410'}">${s.level==='risk'?'⚠ Flagged':'👁 Watch'}</span>
+          </div>
+          <div style="margin-top:8px;font-size:11.5px;color:var(--muted)">${lang==='en'?'Latest: ':'नवीनतम: '}${s.apaarHistory[0].school.replace('Govt. ','')} · ${s.apaarHistory[0].cls}</div>
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+let toastTimer;
+function showToast(msg){
+  const t=document.getElementById('toast');
+  document.getElementById('toast-txt').innerHTML=msg;
+  // force re-trigger animation by briefly removing then re-adding .show
+  t.classList.remove('show');
+  void t.offsetWidth; // reflow
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+/* ---------------- INIT ---------------- */
+// fix 100vh on mobile browsers (address bar offset)
+function setVh(){document.documentElement.style.setProperty('--vh', window.innerHeight*0.01+'px');}
+setVh(); window.addEventListener('resize',setVh);
+
+renderRoster();
+renderRisk();
+</script>
+</body>
+</html>
